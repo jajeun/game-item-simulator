@@ -82,11 +82,38 @@ export const login = async (req, res) => {
       });
     }
 
-    // 임시로 단순한 토큰 생성 (문제 찾기용)
+    // 기기 정보 수집
+    const ipAddress = req.ip || req.connection.remoteAddress || '';
+    const userAgent = req.headers['user-agent'] || '';
+    const deviceId = generateDeviceId(req);
+
+    // 기존 모든 Refresh Token 삭제 (다른 기기에서 로그인 시 보안 강화)
+    await prisma.refreshToken.deleteMany({
+      where: {
+        userId: user.id
+      }
+    });
+
+    // Access Token과 Refresh Token 생성
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id, {
       userId: user.userId,
       name: user.name
+    });
+
+    // Refresh Token을 데이터베이스에 저장
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7일 후 만료
+
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: user.id,
+        ipAddress: ipAddress,
+        userAgent: userAgent,
+        deviceId: deviceId,
+        expiresAt: expiresAt
+      }
     });
 
     res.json({

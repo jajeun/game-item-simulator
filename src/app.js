@@ -2,6 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import authRoutes from './routes/auth.router.js';
+import characterRoutes from './routes/character.router.js';
+import itemRoutes from './routes/item.router.js';
+import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 // 환경변수 로드
 dotenv.config();
@@ -16,7 +20,11 @@ const PORT = process.env.PORT || 3000;
 // 미들웨어 설정
 app.use(cors()); // CORS 허용
 app.use(express.json()); // JSON 파싱
-app.use(express.urlencoded({ extended: true })); // URL 인코딩 파싱
+
+// 라우터 설정
+app.use('/auth', authRoutes);
+app.use('/characters', characterRoutes);
+app.use('/items', itemRoutes);
 
 // 기본 라우트
 app.get('/', (req, res) => {
@@ -36,28 +44,33 @@ app.get('/health', (req, res) => {
   });
 });
 
-// 에러 핸들링 미들웨어
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({
-    error: '서버 내부 오류가 발생했습니다.',
-    message: err.message
-  });
+// 데이터베이스 연결 확인
+app.get('/db-test', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({
+      message: '데이터베이스 연결됨',
+      status: '연결됨'
+    });
+  } catch (error) {
+    res.json({
+      message: '데이터베이스 연결 실패',
+      status: '연결 안됨',
+      error: error.message
+    });
+  }
 });
 
-// 404 핸들링
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: '요청한 엔드포인트를 찾을 수 없습니다.',
-    path: req.originalUrl
-  });
-});
+// 에러 핸들링 미들웨어 (라우터 이후에 배치)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 // 서버 시작
 app.listen(PORT, () => {
   console.log(`🚀 서버가 포트 ${PORT}에서 실행 중입니다.`);
   console.log(`📡 API 서버: http://localhost:${PORT}`);
   console.log(`🏥 헬스체크: http://localhost:${PORT}/health`);
+  console.log(`🔧 데이터베이스 테스트: http://localhost:${PORT}/db-test`);
 });
 
 // Graceful shutdown

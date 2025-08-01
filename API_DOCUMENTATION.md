@@ -6,7 +6,18 @@
 ## 🚀 기본 정보
 - **Base URL**: `http://localhost:3000`
 - **Content-Type**: `application/json`
-- **인증 방식**: JWT Bearer Token
+- **인증 방식**: JWT Access Token (Bearer Token)
+
+## 🔐 인증 시스템 개요
+
+### **토큰 구조**
+- **Access Token**: 15분 유효, API 요청 시 사용
+- **Refresh Token**: 7일 유효, Access Token 갱신용
+
+### **보안 기능**
+- **기기별 토큰 관리**: IP 주소 및 User Agent 기반 기기 식별
+- **다중 기기 로그인 제어**: 새로운 기기 로그인 시 기존 토큰 무효화
+- **토큰 자동 만료**: 데이터베이스 레벨에서 만료 시간 관리
 
 ## 📚 API 엔드포인트
 
@@ -57,7 +68,8 @@ POST /auth/login
 ```json
 {
   "message": "로그인이 완료되었습니다.",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": 1,
     "userId": "user123",
@@ -66,13 +78,82 @@ POST /auth/login
 }
 ```
 
+**보안 기능:**
+- 새로운 기기에서 로그인 시 기존 모든 Refresh Token 무효화
+- IP 주소 및 User Agent 정보로 기기 식별
+- 데이터베이스에 Refresh Token 저장 및 추적
+
+#### 3. 토큰 갱신
+```http
+POST /auth/refresh
+```
+
+**Request Body:**
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "토큰이 갱신되었습니다.",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 1,
+    "userId": "user123",
+    "name": "홍길동"
+  }
+}
+```
+
+**동작 방식:**
+- Refresh Token 검증 후 새로운 Access Token 발급
+- 만료된 Refresh Token 자동 삭제
+- 데이터베이스에서 토큰 존재 여부 확인
+
+#### 4. 로그아웃
+```http
+POST /auth/logout
+```
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Request Body:**
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "로그아웃이 완료되었습니다."
+}
+```
+
+**보안 기능:**
+- Refresh Token 즉시 삭제
+- 세션 완전 종료
+- 재로그인 필요
+
 ### 👤 캐릭터 API
 
-**인증 필요**: 모든 캐릭터 API는 `Authorization: Bearer <token>` 헤더가 필요합니다.
+**인증 필요**: 모든 캐릭터 API는 `Authorization: Bearer <access_token>` 헤더가 필요합니다.
 
 #### 1. 캐릭터 생성
 ```http
 POST /characters
+```
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
 ```
 
 **Request Body:**
@@ -248,7 +329,7 @@ GET /items/:itemCode
 
 ### 🎒 인벤토리 API
 
-**인증 필요**: 모든 인벤토리 API는 `Authorization: Bearer <token>` 헤더가 필요합니다.
+**인증 필요**: 모든 인벤토리 API는 `Authorization: Bearer <access_token>` 헤더가 필요합니다.
 
 #### 1. 인벤토리 아이템 추가
 ```http
@@ -325,7 +406,7 @@ DELETE /inventory/:characterId/items/:inventoryItemId
 
 ### 🔧 장착 시스템 API
 
-**인증 필요**: 모든 장착 API는 `Authorization: Bearer <token>` 헤더가 필요합니다.
+**인증 필요**: 모든 장착 API는 `Authorization: Bearer <access_token>` 헤더가 필요합니다.
 
 #### 1. 아이템 장착
 ```http
@@ -459,11 +540,30 @@ GET /db-test
 
 ## 🚀 Insomnia API 클라이언트 사용 예시
 
-### 1. 회원가입 및 로그인
+### 환경 변수 설정
+Insomnia에서 다음 환경 변수를 설정하세요:
+
+**Base Environment Variables:**
+```
+baseUrl: http://localhost:3000
+```
+
+**Auth Environment Variables:**
+```
+accessToken: (로그인 후 자동 설정)
+refreshToken: (로그인 후 자동 설정)
+userId: (로그인 후 자동 설정)
+characterId: (캐릭터 생성 후 설정)
+itemCode: 1
+inventoryItemId: (인벤토리 아이템 ID)
+equippedItemId: (장착된 아이템 ID)
+```
+
+### 1. 인증 시스템
 
 #### 1-1. 회원가입
 **Method**: `POST`  
-**URL**: `http://localhost:3000/auth/signup`  
+**URL**: `{{baseUrl}}/auth/signup`  
 **Headers**: 
 ```
 Content-Type: application/json
@@ -471,10 +571,10 @@ Content-Type: application/json
 **Body**:
 ```json
 {
-  "id": "testuser",
+  "id": "testuser123",
   "password": "password123",
   "confirm": "password123",
-  "name": "테스트 사용자"
+  "name": "테스트사용자"
 }
 ```
 **예상 결과 (201)**:
@@ -483,8 +583,8 @@ Content-Type: application/json
   "message": "회원가입이 완료되었습니다.",
   "user": {
     "id": 1,
-    "userId": "testuser",
-    "name": "테스트 사용자",
+    "userId": "testuser123",
+    "name": "테스트사용자",
     "createdAt": "2024-01-01T00:00:00.000Z"
   }
 }
@@ -492,7 +592,7 @@ Content-Type: application/json
 
 #### 1-2. 로그인
 **Method**: `POST`  
-**URL**: `http://localhost:3000/auth/login`  
+**URL**: `{{baseUrl}}/auth/login`  
 **Headers**: 
 ```
 Content-Type: application/json
@@ -500,7 +600,7 @@ Content-Type: application/json
 **Body**:
 ```json
 {
-  "id": "testuser",
+  "id": "testuser123",
   "password": "password123"
 }
 ```
@@ -508,12 +608,75 @@ Content-Type: application/json
 ```json
 {
   "message": "로그인이 완료되었습니다.",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": 1,
-    "userId": "testuser",
-    "name": "테스트 사용자"
+    "userId": "testuser123",
+    "name": "테스트사용자"
   }
+}
+```
+
+**응답 처리 스크립트 (Insomnia):**
+```javascript
+// 응답에서 토큰 추출하여 환경 변수에 저장
+const response = JSON.parse(response.body);
+if (response.accessToken) {
+  insomnia.environment.set('accessToken', response.accessToken);
+}
+if (response.refreshToken) {
+  insomnia.environment.set('refreshToken', response.refreshToken);
+}
+if (response.user && response.user.id) {
+  insomnia.environment.set('userId', response.user.id);
+}
+```
+
+#### 1-3. 토큰 갱신
+**Method**: `POST`  
+**URL**: `{{baseUrl}}/auth/refresh`  
+**Headers**: 
+```
+Content-Type: application/json
+```
+**Body**:
+```json
+{
+  "refreshToken": "{{refreshToken}}"
+}
+```
+**예상 결과 (200)**:
+```json
+{
+  "message": "토큰이 갱신되었습니다.",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 1,
+    "userId": "testuser123",
+    "name": "테스트사용자"
+  }
+}
+```
+
+#### 1-4. 로그아웃
+**Method**: `POST`  
+**URL**: `{{baseUrl}}/auth/logout`  
+**Headers**: 
+```
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+```
+**Body**:
+```json
+{
+  "refreshToken": "{{refreshToken}}"
+}
+```
+**예상 결과 (200)**:
+```json
+{
+  "message": "로그아웃이 완료되었습니다."
 }
 ```
 
@@ -521,11 +684,11 @@ Content-Type: application/json
 
 #### 2-1. 캐릭터 생성
 **Method**: `POST`  
-**URL**: `http://localhost:3000/characters`  
+**URL**: `{{baseUrl}}/characters`  
 **Headers**: 
 ```
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{accessToken}}
 ```
 **Body**:
 ```json
@@ -548,12 +711,21 @@ Authorization: Bearer {{token}}
 }
 ```
 
+**응답 처리 스크립트 (Insomnia):**
+```javascript
+// 캐릭터 ID를 환경 변수에 저장
+const response = JSON.parse(response.body);
+if (response.character && response.character.id) {
+  insomnia.environment.set('characterId', response.character.id);
+}
+```
+
 #### 2-2. 캐릭터 조회
 **Method**: `GET`  
-**URL**: `http://localhost:3000/characters/{{characterId}}`  
+**URL**: `{{baseUrl}}/characters/{{characterId}}`  
 **Headers**: 
 ```
-Authorization: Bearer {{token}}
+Authorization: Bearer {{accessToken}}
 ```
 **예상 결과 (200)**:
 ```json
@@ -569,25 +741,11 @@ Authorization: Bearer {{token}}
 }
 ```
 
-#### 2-3. 캐릭터 삭제
-**Method**: `DELETE`  
-**URL**: `http://localhost:3000/characters/{{characterId}}`  
-**Headers**: 
-```
-Authorization: Bearer {{token}}
-```
-**예상 결과 (200)**:
-```json
-{
-  "message": "캐릭터가 삭제되었습니다."
-}
-```
-
 ### 3. 아이템 관리
 
 #### 3-1. 아이템 생성
 **Method**: `POST`  
-**URL**: `http://localhost:3000/items`  
+**URL**: `{{baseUrl}}/items`  
 **Headers**: 
 ```
 Content-Type: application/json
@@ -595,13 +753,13 @@ Content-Type: application/json
 **Body**:
 ```json
 {
-  "item_code": 1,
-  "item_name": "강화된 검",
-  "item_stat": {
+  "itemCode": 1,
+  "itemName": "강화된 검",
+  "itemStat": {
     "health": 50,
     "power": 20
   },
-  "item_price": 1000,
+  "itemPrice": 1000,
   "description": "강력한 공격력을 가진 검입니다."
 }
 ```
@@ -626,88 +784,35 @@ Content-Type: application/json
 
 #### 3-2. 아이템 목록 조회
 **Method**: `GET`  
-**URL**: `http://localhost:3000/items`  
-**예상 결과 (200)**:
-```json
-[
-  {
-    "itemCode": 1,
-    "itemName": "강화된 검",
-    "itemPrice": 1000,
-    "description": "강력한 공격력을 가진 검입니다."
-  },
-  {
-    "itemCode": 2,
-    "itemName": "마법 지팡이",
-    "itemPrice": 1500,
-    "description": "마법 공격력을 증폭시키는 지팡이입니다."
-  }
-]
-```
-
-#### 3-3. 아이템 상세 조회
-**Method**: `GET`  
-**URL**: `http://localhost:3000/items/{{itemCode}}`  
+**URL**: `{{baseUrl}}/items`  
 **예상 결과 (200)**:
 ```json
 {
-  "itemCode": 1,
-  "itemName": "강화된 검",
-  "itemStat": {
-    "health": 50,
-    "power": 20
-  },
-  "itemPrice": 1000,
-  "description": "강력한 공격력을 가진 검입니다."
-}
-```
-
-#### 3-4. 아이템 수정
-**Method**: `PUT`  
-**URL**: `http://localhost:3000/items/{{itemCode}}`  
-**Headers**: 
-```
-Content-Type: application/json
-```
-**Body**:
-```json
-{
-  "item_name": "매우 강화된 검",
-  "item_stat": {
-    "health": 100,
-    "power": 50
-  },
-  "description": "매우 강력한 공격력을 가진 검입니다."
-}
-```
-**예상 결과 (200)**:
-```json
-{
-  "message": "아이템이 수정되었습니다.",
-  "item": {
-    "id": 1,
-    "itemCode": 1,
-    "itemName": "매우 강화된 검",
-    "itemStat": {
-      "health": 100,
-      "power": 50
-    },
-    "itemPrice": 1000,
-    "description": "매우 강력한 공격력을 가진 검입니다.",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
-  }
+  "items": [
+    {
+      "id": 1,
+      "itemCode": 1,
+      "itemName": "강화된 검",
+      "itemStat": {
+        "health": 50,
+        "power": 20
+      },
+      "itemPrice": 1000,
+      "description": "강력한 공격력을 가진 검입니다."
+    }
+  ]
 }
 ```
 
 ### 4. 인벤토리 관리
 
-#### 4-1. 인벤토리 아이템 추가
+#### 4-1. 인벤토리에 아이템 추가
 **Method**: `POST`  
-**URL**: `http://localhost:3000/inventory/{{characterId}}/items`  
+**URL**: `{{baseUrl}}/inventory/{{characterId}}/items`  
 **Headers**: 
 ```
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{accessToken}}
 ```
 **Body**:
 ```json
@@ -738,10 +843,10 @@ Authorization: Bearer {{token}}
 
 #### 4-2. 인벤토리 조회
 **Method**: `GET`  
-**URL**: `http://localhost:3000/inventory/{{characterId}}`  
+**URL**: `{{baseUrl}}/inventory/{{characterId}}`  
 **Headers**: 
 ```
-Authorization: Bearer {{token}}
+Authorization: Bearer {{accessToken}}
 ```
 **예상 결과 (200)**:
 ```json
@@ -768,10 +873,10 @@ Authorization: Bearer {{token}}
 
 #### 4-3. 인벤토리에서 아이템 제거
 **Method**: `DELETE`  
-**URL**: `http://localhost:3000/inventory/{{characterId}}/items/{{inventoryItemId}}`  
+**URL**: `{{baseUrl}}/inventory/{{characterId}}/items/{{inventoryItemId}}`  
 **Headers**: 
 ```
-Authorization: Bearer {{token}}
+Authorization: Bearer {{accessToken}}
 ```
 **예상 결과 (200)**:
 ```json
@@ -784,11 +889,11 @@ Authorization: Bearer {{token}}
 
 #### 5-1. 아이템 장착
 **Method**: `POST`  
-**URL**: `http://localhost:3000/equipment/{{characterId}}/equip`  
+**URL**: `{{baseUrl}}/equipment/{{characterId}}/equip`  
 **Headers**: 
 ```
 Content-Type: application/json
-Authorization: Bearer {{token}}
+Authorization: Bearer {{accessToken}}
 ```
 **Body**:
 ```json
@@ -819,10 +924,10 @@ Authorization: Bearer {{token}}
 
 #### 5-2. 장착된 아이템 조회
 **Method**: `GET`  
-**URL**: `http://localhost:3000/equipment/{{characterId}}`  
+**URL**: `{{baseUrl}}/equipment/{{characterId}}`  
 **Headers**: 
 ```
-Authorization: Bearer {{token}}
+Authorization: Bearer {{accessToken}}
 ```
 **예상 결과 (200)**:
 ```json
@@ -849,10 +954,10 @@ Authorization: Bearer {{token}}
 
 #### 5-3. 아이템 해제
 **Method**: `DELETE`  
-**URL**: `http://localhost:3000/equipment/{{characterId}}/unequip/{{equippedItemId}}`  
+**URL**: `{{baseUrl}}/equipment/{{characterId}}/unequip/{{equippedItemId}}`  
 **Headers**: 
 ```
-Authorization: Bearer {{token}}
+Authorization: Bearer {{accessToken}}
 ```
 **예상 결과 (200)**:
 ```json
@@ -861,54 +966,33 @@ Authorization: Bearer {{token}}
 }
 ```
 
-### 6. 시스템 상태 확인
-
-#### 6-1. 서버 상태
-**Method**: `GET`  
-**URL**: `http://localhost:3000/`  
-**예상 결과 (200)**:
-```json
-{
-  "message": "🎮 게임 아이템 시뮬레이터 API 서버",
-  "status": "연결됨"
-}
-```
-
-#### 6-2. 데이터베이스 연결 확인
-**Method**: `GET`  
-**URL**: `http://localhost:3000/db-test`  
-**예상 결과 (200)**:
-```json
-{
-  "message": "데이터베이스 연결됨",
-  "status": "연결됨"
-}
-```
-
-
 ## 🔧 Insomnia 환경 변수 설정
 
-Insomnia에서 다음 환경 변수를 설정하면 더 편리합니다:
+### **기본 환경 변수**
+```
+baseUrl: http://localhost:3000
+```
 
-**Environment Variables:**
-- `baseUrl`: `http://localhost:3000`
-- `token`: (로그인 후 받은 JWT 토큰)
-- `characterId`: (생성된 캐릭터 ID)
-- `itemCode`: (생성된 아이템 코드)
-- `inventoryItemId`: (인벤토리 아이템 ID)
-- `equippedItemId`: (장착된 아이템 ID)
+### **인증 관련 환경 변수**
+```
+accessToken: (로그인 후 자동 설정)
+refreshToken: (로그인 후 자동 설정)
+userId: (로그인 후 자동 설정)
+```
 
-**사용법**: URL에서 `{{변수명}}` 형태로 사용
-- `{{baseUrl}}/auth/login`
-- `{{baseUrl}}/characters/{{characterId}}`
-- `{{baseUrl}}/inventory/{{characterId}}/items/{{inventoryItemId}}`
-- `{{baseUrl}}/equipment/{{characterId}}/unequip/{{equippedItemId}}`
+### **게임 관련 환경 변수**
+```
+characterId: (캐릭터 생성 후 설정)
+itemCode: 1
+inventoryItemId: (인벤토리 아이템 ID)
+equippedItemId: (장착된 아이템 ID)
+```
 
 ## 📝 주의사항
 
-1. **인증**: 캐릭터 API는 반드시 JWT 토큰이 필요합니다.
-2. **아이템 가격**: 아이템 수정 시 `item_price`는 변경할 수 없습니다.
-3. **캐릭터 소유권**: 자신의 캐릭터만 삭제할 수 있습니다.
-4. **아이템 코드**: 아이템 코드는 고유해야 합니다.
-5. **JSON 스탯**: 아이템 스탯은 JSON 객체 형태로 저장됩니다.
-6. **장착 조건**: 인벤토리에 있는 아이템만 장착할 수 있습니다. 
+1. **토큰 관리**: Access Token은 15분 후 만료되므로 토큰 갱신 API 사용
+2. **기기 제한**: 새로운 기기에서 로그인 시 기존 토큰 무효화
+3. **인증 헤더**: 모든 보호된 API에는 `Authorization: Bearer {{accessToken}}` 헤더 필요
+4. **환경 변수**: Insomnia에서 환경 변수를 적절히 설정하여 테스트
+5. **토큰 갱신**: Access Token 만료 시 `/auth/refresh` API로 갱신
+6. **장착 조건**: 인벤토리에 있는 아이템만 장착 가능 

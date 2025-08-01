@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import authRoutes from './src/routes/auth.router.js';
 import characterRoutes from './src/routes/character.router.js';
 import itemRoutes from './src/routes/item.router.js';
+import inventoryRoutes from './src/routes/inventory.router.js';
 import { errorHandler, notFoundHandler } from './src/middleware/error.middleware.js';
 
 // 환경변수 로드
@@ -25,12 +26,22 @@ app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/characters', characterRoutes);
 app.use('/items', itemRoutes);
+app.use('/inventory', inventoryRoutes);
 
 // 기본 라우트
 app.get('/', (req, res) => {
   res.json({
     message: '🎮 게임 아이템 시뮬레이터 API 서버',
     status: '연결됨'
+  });
+});
+
+// 헬스체크 엔드포인트
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    database: 'connected'
   });
 });
 

@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// 사용자 테이블
+model User {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique @map("user_id") // 로그인용 ID
+  password  String // 해시화된 비밀번호
+  name      String // 사용자 이름
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 관계 설정
+  characters Character[]
+
+  @@map("users")
+}
+
+// 캐릭터 테이블
+model Character {
+  id            Int      @id @default(autoincrement())
+  characterName String   @unique @map("character_name")
+  health        Int      @default(500)
+  power         Int      @default(100)
+  money         Int      @default(10000)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // 관계 설정
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 인벤토리 관계
+  inventoryItems InventoryItem[]
+  equippedItems  EquippedItem[]
+
+  @@map("characters")
+}
+
+// 아이템 테이블
+model Item {
+  id          Int      @id @default(autoincrement())
+  itemCode    Int      @unique @map("item_code")
+  itemName    String   @map("item_name")
+  itemStat    Json     @map("item_stat") // JSON 형태로 스탯 저장
+  itemPrice   Int      @map("item_price")
+  description String?  @map("description") // 아이템 설명란(선택적)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // 관계 설정
+  inventoryItems InventoryItem[]
+  equippedItems  EquippedItem[]
+
+  @@map("items")
+}
+
+// 인벤토리 아이템 (장착 안한 아이템)
+// 중복 가능하도록 unique 제약 제거
+model InventoryItem {
+  id          Int      @id @default(autoincrement())
+  characterId Int      @map("character_id")
+  itemId      Int      @map("item_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // 관계 설정
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  item      Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  // @@unique([characterId, itemId]) // 중복 허용을 위해 주석 처리 또는 삭제
+  @@map("inventory_items")
+}
+
+// 장착된 아이템
+model EquippedItem {
+  id          Int      @id @default(autoincrement())
+  characterId Int      @map("character_id")
+  itemId      Int      @map("item_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // 관계 설정
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  item      Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, itemId])
+  @@map("equipped_items")
+}

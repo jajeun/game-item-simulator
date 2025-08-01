@@ -56,6 +56,24 @@ export const loginSchema = Joi.object({
     })
 });
 
+// 토큰 갱신 유효성 검사 스키마
+export const refreshTokenSchema = Joi.object({
+  refreshToken: Joi.string()
+    .required()
+    .messages({
+      'any.required': 'Refresh Token은 필수 입력 항목입니다.'
+    })
+});
+
+// 로그아웃 유효성 검사 스키마
+export const logoutSchema = Joi.object({
+  refreshToken: Joi.string()
+    .optional()
+    .messages({
+      'string.base': 'Refresh Token은 문자열이어야 합니다.'
+    })
+});
+
 // 유효성 검사 미들웨어
 export const validateRequest = (schema) => {
   return (req, res, next) => {

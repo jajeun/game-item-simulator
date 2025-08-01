@@ -35,7 +35,7 @@ export const addToInventory = async (req, res) => {
     }
 
     // 인벤토리에 아이템 추가
-    const itnventoryIem = await prisma.inventoryItem.create({
+    const inventoryItem = await prisma.inventoryItem.create({
       data: {
         characterId: parseInt(characterId),
         itemId: item.id

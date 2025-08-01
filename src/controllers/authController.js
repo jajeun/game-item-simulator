@@ -82,17 +82,18 @@ export const login = async (req, res) => {
       });
     }
 
+    // 임시로 Refresh Token 데이터베이스 작업 비활성화 (문제 해결 후 복원 예정)
     // 기기 정보 수집
-    const ipAddress = req.ip || req.connection.remoteAddress || '';
-    const userAgent = req.headers['user-agent'] || '';
-    const deviceId = generateDeviceId(req);
+    // const ipAddress = req.ip || req.connection.remoteAddress || '';
+    // const userAgent = req.headers['user-agent'] || '';
+    // const deviceId = generateDeviceId(req);
 
     // 기존 모든 Refresh Token 삭제 (다른 기기에서 로그인 시 보안 강화)
-    await prisma.refreshToken.deleteMany({
-      where: {
-        userId: user.id
-      }
-    });
+    // await prisma.refreshToken.deleteMany({
+    //   where: {
+    //     userId: user.id
+    //   }
+    // });
 
     // Access Token과 Refresh Token 생성
     const accessToken = generateAccessToken(user.id);
@@ -101,20 +102,20 @@ export const login = async (req, res) => {
       name: user.name
     });
 
-    // Refresh Token을 데이터베이스에 저장
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7일 후 만료
+    // Refresh Token을 데이터베이스에 저장 (임시 비활성화)
+    // const expiresAt = new Date();
+    // expiresAt.setDate(expiresAt.getDate() + 7); // 7일 후 만료
 
-    await prisma.refreshToken.create({
-      data: {
-        token: refreshToken,
-        userId: user.id,
-        ipAddress: ipAddress,
-        userAgent: userAgent,
-        deviceId: deviceId,
-        expiresAt: expiresAt
-      }
-    });
+    // await prisma.refreshToken.create({
+    //   data: {
+    //     token: refreshToken,
+    //     userId: user.id,
+    //     ipAddress: ipAddress,
+    //     userAgent: userAgent,
+    //     deviceId: deviceId,
+    //     expiresAt: expiresAt
+    //   }
+    // });
 
     res.json({
       message: '로그인이 완료되었습니다.',
@@ -207,7 +208,7 @@ export const refreshToken = async (req, res) => {
   } catch (error) {
     console.error('토큰 갱신 오류:', error);
     res.status(500).json({
-      error: '서버 내부 오류가 발생했습니다.'
+      error: `서버 내부 오류가 발생했습니다: ${error.message}`
     });
   }
 };

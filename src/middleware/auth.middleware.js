@@ -1,9 +1,9 @@
-import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { verifyToken, isAccessToken } from '../utils/jwt.utils.js';
 
 const prisma = new PrismaClient();
 
-// JWT 인증 미들웨어
+// JWT 인증 미들웨어 (Access Token 검증)
 export const authenticateToken = async (req, res, next) => {
   try {
     // Authorization 헤더에서 토큰 추출
@@ -17,8 +17,16 @@ export const authenticateToken = async (req, res, next) => {
       });
     }
 
+    // Access Token 타입 확인
+    if (!isAccessToken(token)) {
+      return res.status(401).json({
+        error: '유효하지 않은 토큰 타입입니다.',
+        message: 'Access Token을 사용해주세요.'
+      });
+    }
+
     // JWT 토큰 검증
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = verifyToken(token);
     
     // 사용자 정보 조회
     const user = await prisma.user.findUnique({
@@ -42,7 +50,7 @@ export const authenticateToken = async (req, res, next) => {
     next();
 
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
+    if (error.message === '유효하지 않은 토큰입니다.') {
       return res.status(401).json({
         error: '유효하지 않은 토큰입니다.',
         message: '토큰 형식이 올바르지 않습니다.'
@@ -52,7 +60,7 @@ export const authenticateToken = async (req, res, next) => {
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         error: '토큰이 만료되었습니다.',
-        message: '다시 로그인해주세요.'
+        message: 'Refresh Token을 사용하여 토큰을 갱신해주세요.'
       });
     }
 

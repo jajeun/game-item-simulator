@@ -129,6 +129,17 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.RefreshTokenScalarFieldEnum = {
+  id: 'id',
+  token: 'token',
+  userId: 'userId',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  deviceId: 'deviceId',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.CharacterScalarFieldEnum = {
   id: 'id',
   characterName: 'characterName',
@@ -180,6 +191,18 @@ exports.Prisma.UserOrderByRelevanceFieldEnum = {
   name: 'name'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
+exports.Prisma.RefreshTokenOrderByRelevanceFieldEnum = {
+  token: 'token',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  deviceId: 'deviceId'
+};
+
 exports.Prisma.CharacterOrderByRelevanceFieldEnum = {
   characterName: 'characterName'
 };
@@ -195,11 +218,6 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
-exports.Prisma.NullsOrder = {
-  first: 'first',
-  last: 'last'
-};
-
 exports.Prisma.ItemOrderByRelevanceFieldEnum = {
   itemName: 'itemName',
   description: 'description'
@@ -208,6 +226,7 @@ exports.Prisma.ItemOrderByRelevanceFieldEnum = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  RefreshToken: 'RefreshToken',
   Character: 'Character',
   Item: 'Item',
   InventoryItem: 'InventoryItem',

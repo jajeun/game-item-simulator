@@ -21,9 +21,27 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // 관계 설정
-  characters Character[]
+  characters    Character[]
+  refreshTokens RefreshToken[]
 
   @@map("users")
+}
+
+// Refresh Token 테이블
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique // Refresh Token 값
+  userId    Int      @map("user_id")
+  ipAddress String?  @map("ip_address") // IP 주소
+  userAgent String?  @map("user_agent") // 브라우저/앱 정보
+  deviceId  String?  @map("device_id") // 기기 식별자
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // 관계 설정
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
 }
 
 // 캐릭터 테이블

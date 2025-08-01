@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/auth.router.js';
 import characterRoutes from './routes/character.router.js';
 import itemRoutes from './routes/item.router.js';
+import inventoryRoutes from './routes/inventory.router.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 // 환경변수 로드
@@ -25,6 +26,7 @@ app.use(express.json()); // JSON 파싱
 app.use('/auth', authRoutes);
 app.use('/characters', characterRoutes);
 app.use('/items', itemRoutes);
+app.use('/inventory', inventoryRoutes);
 
 // 기본 라우트
 app.get('/', (req, res) => {

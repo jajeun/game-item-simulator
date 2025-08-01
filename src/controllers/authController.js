@@ -9,35 +9,6 @@ export const signup = async (req, res) => {
   try {
     const { id, password, confirm, name } = req.body;
 
-    // 유효성 검사
-    if (!id || !password || !confirm || !name) {
-      return res.status(400).json({
-        error: '모든 필드를 입력해주세요.'
-      });
-    }
-
-    // ID 형식 검사 (영어+숫자)
-    const idRegex = /^[a-zA-Z0-9]+$/;
-    if (!idRegex.test(id)) {
-      return res.status(400).json({
-        error: 'ID는 영어와 숫자만 사용 가능합니다.'
-      });
-    }
-
-    // 비밀번호 길이 검사
-    if (password.length < 6) {
-      return res.status(400).json({
-        error: '비밀번호는 최소 6자 이상이어야 합니다.'
-      });
-    }
-
-    // 비밀번호 확인
-    if (password !== confirm) {
-      return res.status(400).json({
-        error: '비밀번호가 일치하지 않습니다.'
-      });
-    }
-
     // ID 중복 검사
     const existingUser = await prisma.user.findUnique({
       where: { userId: id }
@@ -84,13 +55,6 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { id, password } = req.body;
-
-    // 유효성 검사
-    if (!id || !password) {
-      return res.status(400).json({
-        error: 'ID와 비밀번호를 입력해주세요.'
-      });
-    }
 
     // 사용자 찾기
     const user = await prisma.user.findUnique({

@@ -323,6 +323,83 @@ DELETE /inventory/:characterId/items/:inventoryItemId
 }
 ```
 
+### 🔧 장착 시스템 API
+
+**인증 필요**: 모든 장착 API는 `Authorization: Bearer <token>` 헤더가 필요합니다.
+
+#### 1. 아이템 장착
+```http
+POST /equipment/:characterId/equip
+```
+
+**Request Body:**
+```json
+{
+  "itemCode": 1
+}
+```
+
+**Response (201):**
+```json
+{
+  "message": "아이템이 장착되었습니다.",
+  "equippedItem": {
+    "id": 1,
+    "item": {
+      "itemCode": 1,
+      "itemName": "강화된 검",
+      "itemStat": {
+        "health": 50,
+        "power": 20
+      },
+      "itemPrice": 1000,
+      "description": "강력한 공격력을 가진 검입니다."
+    },
+    "equippedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+#### 2. 장착된 아이템 조회
+```http
+GET /equipment/:characterId
+```
+
+**Response (200):**
+```json
+{
+  "characterId": 1,
+  "equippedItems": [
+    {
+      "id": 1,
+      "item": {
+        "itemCode": 1,
+        "itemName": "강화된 검",
+        "itemStat": {
+          "health": 50,
+          "power": 20
+        },
+        "itemPrice": 1000,
+        "description": "강력한 공격력을 가진 검입니다."
+      },
+      "equippedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+#### 3. 아이템 해제
+```http
+DELETE /equipment/:characterId/unequip/:equippedItemId
+```
+
+**Response (200):**
+```json
+{
+  "message": "아이템이 해제되었습니다."
+}
+```
+
 ### 🏥 헬스체크 API
 
 #### 1. 서버 상태 확인
@@ -703,9 +780,90 @@ Authorization: Bearer {{token}}
 }
 ```
 
-### 5. 시스템 상태 확인
+### 5. 장착 시스템
 
-#### 5-1. 서버 상태
+#### 5-1. 아이템 장착
+**Method**: `POST`  
+**URL**: `http://localhost:3000/equipment/{{characterId}}/equip`  
+**Headers**: 
+```
+Content-Type: application/json
+Authorization: Bearer {{token}}
+```
+**Body**:
+```json
+{
+  "itemCode": 1
+}
+```
+**예상 결과 (201)**:
+```json
+{
+  "message": "아이템이 장착되었습니다.",
+  "equippedItem": {
+    "id": 1,
+    "item": {
+      "itemCode": 1,
+      "itemName": "강화된 검",
+      "itemStat": {
+        "health": 50,
+        "power": 20
+      },
+      "itemPrice": 1000,
+      "description": "강력한 공격력을 가진 검입니다."
+    },
+    "equippedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+#### 5-2. 장착된 아이템 조회
+**Method**: `GET`  
+**URL**: `http://localhost:3000/equipment/{{characterId}}`  
+**Headers**: 
+```
+Authorization: Bearer {{token}}
+```
+**예상 결과 (200)**:
+```json
+{
+  "characterId": 1,
+  "equippedItems": [
+    {
+      "id": 1,
+      "item": {
+        "itemCode": 1,
+        "itemName": "강화된 검",
+        "itemStat": {
+          "health": 50,
+          "power": 20
+        },
+        "itemPrice": 1000,
+        "description": "강력한 공격력을 가진 검입니다."
+      },
+      "equippedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+#### 5-3. 아이템 해제
+**Method**: `DELETE`  
+**URL**: `http://localhost:3000/equipment/{{characterId}}/unequip/{{equippedItemId}}`  
+**Headers**: 
+```
+Authorization: Bearer {{token}}
+```
+**예상 결과 (200)**:
+```json
+{
+  "message": "아이템이 해제되었습니다."
+}
+```
+
+### 6. 시스템 상태 확인
+
+#### 6-1. 서버 상태
 **Method**: `GET`  
 **URL**: `http://localhost:3000/`  
 **예상 결과 (200)**:
@@ -716,7 +874,7 @@ Authorization: Bearer {{token}}
 }
 ```
 
-#### 5-2. 데이터베이스 연결 확인
+#### 6-2. 데이터베이스 연결 확인
 **Method**: `GET`  
 **URL**: `http://localhost:3000/db-test`  
 **예상 결과 (200)**:
@@ -728,10 +886,29 @@ Authorization: Bearer {{token}}
 ```
 
 
+## 🔧 Insomnia 환경 변수 설정
+
+Insomnia에서 다음 환경 변수를 설정하면 더 편리합니다:
+
+**Environment Variables:**
+- `baseUrl`: `http://localhost:3000`
+- `token`: (로그인 후 받은 JWT 토큰)
+- `characterId`: (생성된 캐릭터 ID)
+- `itemCode`: (생성된 아이템 코드)
+- `inventoryItemId`: (인벤토리 아이템 ID)
+- `equippedItemId`: (장착된 아이템 ID)
+
+**사용법**: URL에서 `{{변수명}}` 형태로 사용
+- `{{baseUrl}}/auth/login`
+- `{{baseUrl}}/characters/{{characterId}}`
+- `{{baseUrl}}/inventory/{{characterId}}/items/{{inventoryItemId}}`
+- `{{baseUrl}}/equipment/{{characterId}}/unequip/{{equippedItemId}}`
+
 ## 📝 주의사항
 
 1. **인증**: 캐릭터 API는 반드시 JWT 토큰이 필요합니다.
 2. **아이템 가격**: 아이템 수정 시 `item_price`는 변경할 수 없습니다.
 3. **캐릭터 소유권**: 자신의 캐릭터만 삭제할 수 있습니다.
 4. **아이템 코드**: 아이템 코드는 고유해야 합니다.
-5. **JSON 스탯**: 아이템 스탯은 JSON 객체 형태로 저장됩니다. 
+5. **JSON 스탯**: 아이템 스탯은 JSON 객체 형태로 저장됩니다.
+6. **장착 조건**: 인벤토리에 있는 아이템만 장착할 수 있습니다. 

@@ -22,7 +22,13 @@ yarn-error.log*
 *.swp
 *.swo
 
+
 # OS
 .DS_Store
 Thumbs.db
 
+
+
+.prettierrc
+
+/src/generated/prisma

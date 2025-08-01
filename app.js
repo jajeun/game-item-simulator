@@ -3,6 +3,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './src/routes/auth.router.js';
+import characterRoutes from './src/routes/character.router.js';
+import itemRoutes from './src/routes/item.router.js';
+import { errorHandler, notFoundHandler } from './src/middleware/error.middleware.js';
 
 // 환경변수 로드
 dotenv.config();
@@ -20,6 +23,8 @@ app.use(express.json());
 
 // 라우터 설정
 app.use('/auth', authRoutes);
+app.use('/characters', characterRoutes);
+app.use('/items', itemRoutes);
 
 // 기본 라우트
 app.get('/', (req, res) => {
@@ -46,10 +51,23 @@ app.get('/db-test', async (req, res) => {
   }
 });
 
+// 에러 핸들링 미들웨어 (라우터 이후에 배치)
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('\n🛑 서버를 종료합니다...');
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
 // 서버 시작
 app.listen(PORT, () => {
   console.log(`🚀 서버가 포트 ${PORT}에서 실행 중입니다.`);
   console.log(`📡 API 서버: http://localhost:${PORT}`);
+  console.log(`🏥 헬스체크: http://localhost:${PORT}/health`);
+  console.log(`🔧 데이터베이스 테스트: http://localhost:${PORT}/db-test`);
 });
 
 export default app; 

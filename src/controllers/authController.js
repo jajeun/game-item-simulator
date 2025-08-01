@@ -1,6 +1,12 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { 
+  generateAccessToken, 
+  generateRefreshToken, 
+  verifyToken, 
+  generateDeviceId,
+  isRefreshToken 
+} from '../utils/jwt.utils.js';
 
 const prisma = new PrismaClient();
 
@@ -76,16 +82,17 @@ export const login = async (req, res) => {
       });
     }
 
-    // JWT 토큰 생성
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    // 임시로 단순한 토큰 생성 (문제 찾기용)
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id, {
+      userId: user.userId,
+      name: user.name
+    });
 
     res.json({
       message: '로그인이 완료되었습니다.',
-      token: token,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
       user: {
         id: user.id,
         userId: user.userId,
@@ -95,6 +102,111 @@ export const login = async (req, res) => {
 
   } catch (error) {
     console.error('로그인 오류:', error);
+    res.status(500).json({
+      error: '서버 내부 오류가 발생했습니다.'
+    });
+  }
+};
+
+// 토큰 갱신
+export const refreshToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        error: 'Refresh Token이 필요합니다.'
+      });
+    }
+
+    // Refresh Token 검증
+    if (!isRefreshToken(refreshToken)) {
+      return res.status(401).json({
+        error: '유효하지 않은 Refresh Token입니다.'
+      });
+    }
+
+    const decoded = verifyToken(refreshToken);
+    const userId = decoded.userId;
+
+    // 데이터베이스에서 Refresh Token 확인
+    const storedToken = await prisma.refreshToken.findFirst({
+      where: {
+        token: refreshToken,
+        userId: userId
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            userId: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    if (!storedToken) {
+      return res.status(401).json({
+        error: '유효하지 않은 Refresh Token입니다.'
+      });
+    }
+
+    // 만료 확인
+    if (new Date() > storedToken.expiresAt) {
+      // 만료된 토큰 삭제
+      await prisma.refreshToken.delete({
+        where: { id: storedToken.id }
+      });
+      
+      return res.status(401).json({
+        error: 'Refresh Token이 만료되었습니다.'
+      });
+    }
+
+    // 새로운 Access Token 생성
+    const newAccessToken = generateAccessToken(userId);
+
+    res.json({
+      message: '토큰이 갱신되었습니다.',
+      accessToken: newAccessToken,
+      user: {
+        id: storedToken.user.id,
+        userId: storedToken.user.userId,
+        name: storedToken.user.name
+      }
+    });
+
+  } catch (error) {
+    console.error('토큰 갱신 오류:', error);
+    res.status(500).json({
+      error: '서버 내부 오류가 발생했습니다.'
+    });
+  }
+};
+
+// 로그아웃
+export const logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const userId = req.locals.user.id;
+
+    if (refreshToken) {
+      // Refresh Token 삭제
+      await prisma.refreshToken.deleteMany({
+        where: {
+          token: refreshToken,
+          userId: userId
+        }
+      });
+    }
+
+    res.json({
+      message: '로그아웃이 완료되었습니다.'
+    });
+
+  } catch (error) {
+    console.error('로그아웃 오류:', error);
     res.status(500).json({
       error: '서버 내부 오류가 발생했습니다.'
     });

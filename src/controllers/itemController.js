@@ -24,7 +24,8 @@ export const createItem = async (req, res) => {
         itemCode: item_code,
         itemName: item_name,
         itemStat: item_stat,
-        itemPrice: item_price
+        itemPrice: item_price,
+        description: req.body.description || null
       },
       select: {
         id: true,
@@ -32,6 +33,7 @@ export const createItem = async (req, res) => {
         itemName: true,
         itemStat: true,
         itemPrice: true,
+        description: true,
         createdAt: true
       }
     });
@@ -71,7 +73,8 @@ export const updateItem = async (req, res) => {
       where: { itemCode: parseInt(itemCode) },
       data: {
         itemName: item_name,
-        itemStat: item_stat
+        itemStat: item_stat,
+        description: req.body.description
       },
       select: {
         id: true,
@@ -79,6 +82,7 @@ export const updateItem = async (req, res) => {
         itemName: true,
         itemStat: true,
         itemPrice: true,
+        description: true,
         updatedAt: true
       }
     });
@@ -103,7 +107,8 @@ export const getItems = async (req, res) => {
       select: {
         itemCode: true,
         itemName: true,
-        itemPrice: true
+        itemPrice: true,
+        description: true
       },
       orderBy: {
         itemCode: 'asc'
@@ -131,7 +136,8 @@ export const getItem = async (req, res) => {
         itemCode: true,
         itemName: true,
         itemStat: true,
-        itemPrice: true
+        itemPrice: true,
+        description: true
       }
     });
 

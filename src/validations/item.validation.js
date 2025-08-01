@@ -39,6 +39,14 @@ export const createItemSchema = Joi.object({
       'number.integer': '아이템 가격은 정수여야 합니다.',
       'number.min': '아이템 가격은 0 이상이어야 합니다.',
       'any.required': '아이템 가격은 필수 입력 항목입니다.'
+    }),
+  
+  description: Joi.string()
+    .max(500)
+    .optional()
+    .allow(null, '')
+    .messages({
+      'string.max': '아이템 설명은 최대 500자까지 가능합니다.'
     })
 });
 
@@ -57,6 +65,14 @@ export const updateItemSchema = Joi.object({
     .optional()
     .messages({
       'object.base': '아이템 스탯은 객체 형태여야 합니다.'
+    }),
+  
+  description: Joi.string()
+    .max(500)
+    .optional()
+    .allow(null, '')
+    .messages({
+      'string.max': '아이템 설명은 최대 500자까지 가능합니다.'
     })
 });
 

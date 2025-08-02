@@ -134,41 +134,6 @@ game-item-simulator/
 └── README.md          # 프로젝트 문서
 ```
 
-## 🧪 테스트
-
-### API 테스트
-- **Postman**: API 테스트 컬렉션 제공
-- **Insomnia**: 쿠키 자동 전송 지원
-- **curl**: 명령줄 테스트 가능
-
-### 데이터베이스 테스트
-```bash
-# 데이터베이스 연결 확인
-curl http://localhost:3000/db-test
-```
-
 ## 📚 API 문서
 
 자세한 API 문서는 [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)를 참조하세요.
-
-## 🤝 기여하기
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 라이선스
-
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
-
-## 👨‍💻 개발자
-
-- **이재준** - [jajeun](https://github.com/jajeun)
-
-## 🙏 감사의 말
-
-- Express.js 팀
-- Prisma 팀
-- JWT 라이브러리 개발자들 

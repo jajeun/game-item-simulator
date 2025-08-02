@@ -6,10 +6,22 @@ const prisma = new PrismaClient();
 // JWT 인증 미들웨어 (Access Token 검증)
 export const authenticateToken = async (req, res, next) => {
   try {
-    // 쿠키에서 토큰 추출
-    const token = req.cookies.accessToken;
+    // 현재 기기 ID 확인
+    const currentDeviceId = req.cookies.currentDeviceId;
+    
+    // 디버깅: 쿠키 정보 로그
+    console.log('🔍 인증 미들웨어 - 쿠키 정보:', {
+      allCookies: req.cookies,
+      currentDeviceId: currentDeviceId,
+      accessToken: req.cookies[`accessToken_${currentDeviceId}`] ? '존재함' : '없음',
+      refreshToken: req.cookies[`refreshToken_${currentDeviceId}`] ? '존재함' : '없음'
+    });
+
+    // 기기별 쿠키에서 토큰 추출
+    const token = req.cookies[`accessToken_${currentDeviceId}`];
 
     if (!token) {
+      console.log('❌ Access Token이 없음');
       return res.status(401).json({
         error: '액세스 토큰이 필요합니다.',
         message: '로그인이 필요합니다.'
@@ -18,6 +30,7 @@ export const authenticateToken = async (req, res, next) => {
 
     // Access Token 타입 확인
     if (!isAccessToken(token)) {
+      console.log('❌ 유효하지 않은 토큰 타입');
       return res.status(401).json({
         error: '유효하지 않은 토큰 타입입니다.',
         message: 'Access Token을 사용해주세요.'
@@ -25,7 +38,9 @@ export const authenticateToken = async (req, res, next) => {
     }
 
     // JWT 토큰 검증
+    console.log('🔍 토큰 검증 시도...');
     const decoded = verifyToken(token);
+    console.log('✅ 토큰 검증 성공, userId:', decoded.userId);
     
     // 사용자 정보 조회
     const user = await prisma.user.findUnique({

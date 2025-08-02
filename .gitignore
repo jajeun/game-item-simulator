@@ -1,5 +1,5 @@
 # Markdown 파일들 무시
-*.md
+.md
 
 # Node.js 관련 
 node_modules/

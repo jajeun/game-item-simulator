@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../generated/prisma/index.js';
+import { PrismaClient } from '@prisma/client';
 import { verifyToken, isAccessToken } from '../utils/jwt.utils.js';
 
 const prisma = new PrismaClient();
@@ -6,14 +6,13 @@ const prisma = new PrismaClient();
 // JWT 인증 미들웨어 (Access Token 검증)
 export const authenticateToken = async (req, res, next) => {
   try {
-    // Authorization 헤더에서 토큰 추출
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer <token>
+    // 쿠키에서 토큰 추출
+    const token = req.cookies.accessToken;
 
     if (!token) {
       return res.status(401).json({
         error: '액세스 토큰이 필요합니다.',
-        message: 'Authorization: Bearer <token> 형식으로 요청해주세요.'
+        message: '로그인이 필요합니다.'
       });
     }
 

@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { PrismaClient } from './generated/prisma/index.js';
+import cookieParser from 'cookie-parser';
+import { PrismaClient } from '@prisma/client';
 import authRoutes from './src/routes/auth.router.js';
 import characterRoutes from './src/routes/character.router.js';
 import itemRoutes from './src/routes/item.router.js';
@@ -20,8 +21,12 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
 // 미들웨어 설정
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' ? false : 'http://localhost:3000',
+  credentials: true // 쿠키 전송을 위해 필요
+}));
 app.use(express.json());
+app.use(cookieParser()); // 쿠키 파서 추가
 
 // 라우터 설정
 app.use('/auth', authRoutes);
@@ -38,14 +43,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// 헬스체크 엔드포인트
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    database: 'connected'
-  });
-});
 
 // 데이터베이스 연결 확인
 app.get('/db-test', async (req, res) => {
@@ -79,7 +76,6 @@ process.on('SIGINT', async () => {
 app.listen(PORT, () => {
   console.log(`🚀 서버가 포트 ${PORT}에서 실행 중입니다.`);
   console.log(`📡 API 서버: http://localhost:${PORT}`);
-  console.log(`🏥 헬스체크: http://localhost:${PORT}/health`);
   console.log(`🔧 데이터베이스 테스트: http://localhost:${PORT}/db-test`);
 });
 

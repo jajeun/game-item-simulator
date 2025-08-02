@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { PrismaClient } from '../../generated/prisma/index.js';
+import { PrismaClient } from '@prisma/client';
 import { 
   generateAccessToken, 
   generateRefreshToken, 
@@ -116,10 +116,23 @@ export const login = async (req, res) => {
       }
     });
 
+    // 쿠키 설정
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // HTTPS에서만 전송
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000 // 15분
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // HTTPS에서만 전송
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7일
+    });
+
     res.json({
       message: '로그인이 완료되었습니다.',
-      accessToken: accessToken,
-      refreshToken: refreshToken,
       user: {
         id: user.id,
         userId: user.userId,
@@ -138,7 +151,7 @@ export const login = async (req, res) => {
 // 토큰 갱신
 export const refreshToken = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
       return res.status(400).json({
@@ -194,9 +207,16 @@ export const refreshToken = async (req, res) => {
     // 새로운 Access Token 생성
     const newAccessToken = generateAccessToken(userId);
 
+    // 새로운 Access Token 쿠키 설정
+    res.cookie('accessToken', newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000 // 15분
+    });
+
     res.json({
       message: '토큰이 갱신되었습니다.',
-      accessToken: newAccessToken,
       user: {
         id: storedToken.user.id,
         userId: storedToken.user.userId,
@@ -215,7 +235,7 @@ export const refreshToken = async (req, res) => {
 // 로그아웃
 export const logout = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    const refreshToken = req.cookies.refreshToken;
     const userId = req.locals.user.id;
 
     if (refreshToken) {
@@ -227,6 +247,10 @@ export const logout = async (req, res) => {
         }
       });
     }
+
+    // 쿠키 삭제
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
 
     res.json({
       message: '로그아웃이 완료되었습니다.'

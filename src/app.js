@@ -19,7 +19,7 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 
 // 미들웨어 설정
-app.use(cors()); // CORS 허용
+app.use(cors()); 
 app.use(express.json()); // JSON 파싱
 
 // 라우터 설정
@@ -31,20 +31,12 @@ app.use('/inventory', inventoryRoutes);
 // 기본 라우트
 app.get('/', (req, res) => {
   res.json({
-    message: '🎮 게임 아이템 시뮬레이터 API 서버',
+    message: '게임 아이템 시뮬레이터 API 서버',
     version: '1.0.0',
     status: 'running'
   });
 });
 
-// 헬스체크 엔드포인트
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    database: 'connected'
-  });
-});
 
 // 데이터베이스 연결 확인
 app.get('/db-test', async (req, res) => {
@@ -69,15 +61,14 @@ app.use(errorHandler);
 
 // 서버 시작
 app.listen(PORT, () => {
-  console.log(`🚀 서버가 포트 ${PORT}에서 실행 중입니다.`);
-  console.log(`📡 API 서버: http://localhost:${PORT}`);
-  console.log(`🏥 헬스체크: http://localhost:${PORT}/health`);
-  console.log(`🔧 데이터베이스 테스트: http://localhost:${PORT}/db-test`);
+  console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
+  console.log(`API 서버: http://localhost:${PORT}`);
+  console.log(`데이터베이스 테스트: http://localhost:${PORT}/db-test`);
 });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('\n🛑 서버를 종료합니다...');
+  console.log('\n서버를 종료합니다...');
   await prisma.$disconnect();
   process.exit(0);
 });

@@ -1,5 +1,10 @@
 # Markdown 파일들 무시
-.md
+DEPLOYMENT.md
+Troubleshooting.md
+deploy-ec2.sh
+.gitignore
+
+
 
 # Node.js 관련 
 node_modules/
@@ -19,6 +24,8 @@ yarn-error.log*
 # IDE
 .vscode/
 .idea/
+.cursor/
+.cursorignore
 *.swp
 *.swo
 

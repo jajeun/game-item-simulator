@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import pkg from '@prisma/client';
+const { PrismaClient } = pkg;
 import { verifyToken, isAccessToken } from '../utils/jwt.utils.js';
 
 const prisma = new PrismaClient();

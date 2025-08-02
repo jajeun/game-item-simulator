@@ -6,9 +6,14 @@
 ## 🚀 기본 정보
 - **Base URL**: `http://localhost:3000`
 - **Content-Type**: `application/json`
-- **인증 방식**: JWT Access Token (Bearer Token)
+- **인증 방식**: JWT Access Token & Refresh Token (HttpOnly 쿠키)
 
 ## 🔐 인증 시스템 개요
+
+### **쿠키 기반 인증**
+- **Access Token**: 15분 유효, HttpOnly 쿠키로 자동 전송
+- **Refresh Token**: 7일 유효, HttpOnly 쿠키로 자동 전송
+- **보안**: SameSite=Strict, HttpOnly 설정으로 XSS 공격 방지
 
 ### **토큰 구조**
 - **Access Token**: 15분 유효, API 요청 시 사용
@@ -18,6 +23,7 @@
 - **기기별 토큰 관리**: IP 주소 및 User Agent 기반 기기 식별
 - **다중 기기 로그인 제어**: 새로운 기기 로그인 시 기존 토큰 무효화
 - **토큰 자동 만료**: 데이터베이스 레벨에서 만료 시간 관리
+- **HttpOnly 쿠키**: JavaScript 접근 불가로 XSS 공격 방지
 
 ## 📚 API 엔드포인트
 
@@ -68,8 +74,6 @@ POST /auth/login
 ```json
 {
   "message": "로그인이 완료되었습니다.",
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": 1,
     "userId": "user123",
@@ -77,6 +81,10 @@ POST /auth/login
   }
 }
 ```
+
+**쿠키 설정:**
+- `accessToken`: HttpOnly, 15분 유효
+- `refreshToken`: HttpOnly, 7일 유효
 
 **보안 기능:**
 - 새로운 기기에서 로그인 시 기존 모든 Refresh Token 무효화
@@ -88,18 +96,12 @@ POST /auth/login
 POST /auth/refresh
 ```
 
-**Request Body:**
-```json
-{
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
+**Request Body:** 없음 (쿠키에서 자동 전송)
 
 **Response (200):**
 ```json
 {
   "message": "토큰이 갱신되었습니다.",
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": 1,
     "userId": "user123",
@@ -108,19 +110,9 @@ POST /auth/refresh
 }
 ```
 
-**동작 방식:**
-- Refresh Token 검증 후 새로운 Access Token 발급
-- 만료된 Refresh Token 자동 삭제
-- 데이터베이스에서 토큰 존재 여부 확인
-
 #### 4. 로그아웃
 ```http
 POST /auth/logout
-```
-
-**Headers:**
-```
-Authorization: Bearer <access_token>
 ```
 
 **Request Body:**
@@ -137,10 +129,9 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**보안 기능:**
-- Refresh Token 즉시 삭제
-- 세션 완전 종료
-- 재로그인 필요
+**쿠키 삭제:**
+- `accessToken` 쿠키 삭제
+- `refreshToken` 쿠키 삭제
 
 ### 👤 캐릭터 API
 

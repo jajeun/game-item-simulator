@@ -65,7 +65,7 @@ model Character {
   @@map("characters")
 }
 
-// 아이템 테이블
+// 아이템 테이블 
 model Item {
   id          Int      @id @default(autoincrement())
   itemCode    Int      @unique @map("item_code")

@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../utils/prisma/index.js';
 
 // 캐릭터 생성
 export const createCharacter = async (req, res) => {

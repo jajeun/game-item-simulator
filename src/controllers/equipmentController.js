@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../utils/prisma/index.js';
 
 // 아이템 장착
 export const equipItem = async (req, res) => {

@@ -1,8 +1,5 @@
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
+import prisma from '../utils/prisma/index.js';
 import { verifyToken, isAccessToken } from '../utils/jwt.utils.js';
-
-const prisma = new PrismaClient();
 
 // JWT 인증 미들웨어 (Access Token 검증)
 export const authenticateToken = async (req, res, next) => {

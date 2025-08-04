@@ -1,7 +1,4 @@
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
-
-const prisma = new PrismaClient();
+import prisma from '../utils/prisma/index.js';
 
 // 아이템 생성
 export const createItem = async (req, res) => {

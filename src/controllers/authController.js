@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../utils/prisma/index.js';
 import { 
   generateAccessToken, 
   generateRefreshToken, 
@@ -7,8 +7,6 @@ import {
   generateDeviceId,
   isRefreshToken 
 } from '../utils/jwt.utils.js';
-
-const prisma = new PrismaClient();
 
 // 회원가입
 export const signup = async (req, res) => {

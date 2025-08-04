@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
-import { PrismaClient } from '@prisma/client';
+import prisma from './src/utils/prisma/index.js';
 import authRoutes from './src/routes/auth.router.js';
 import characterRoutes from './src/routes/character.router.js';
 import itemRoutes from './src/routes/item.router.js';
@@ -15,7 +15,6 @@ dotenv.config();
 
 // Express 앱 생성
 const app = express();
-const prisma = new PrismaClient();
 
 // 포트 설정
 const PORT = process.env.PORT || 3000;

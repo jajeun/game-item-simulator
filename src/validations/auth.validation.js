@@ -56,23 +56,10 @@ export const loginSchema = Joi.object({
     })
 });
 
-// 토큰 갱신 유효성 검사 스키마
-export const refreshTokenSchema = Joi.object({
-  refreshToken: Joi.string()
-    .required()
-    .messages({
-      'any.required': 'Refresh Token은 필수 입력 항목입니다.'
-    })
-});
-
-// 로그아웃 유효성 검사 스키마
+// 로그아웃 유효성 검사 스키마 (Cookie 기반이므로 body validation 불필요)
 export const logoutSchema = Joi.object({
-  refreshToken: Joi.string()
-    .optional()
-    .messages({
-      'string.base': 'Refresh Token은 문자열이어야 합니다.'
-    })
-});
+  // Cookie에서 토큰을 가져오므로 body에는 어떤 데이터도 필요 없음
+}).unknown(true).allow({});
 
 // 유효성 검사 미들웨어
 export const validateRequest = (schema) => {
